@@ -1,0 +1,22 @@
+{
+	"name": "how-s-it-outside-bot-worker",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"webhook": "curl -F \"url=${URL}/webhook\" https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.26.1"
+	},
+	"dependencies": {
+		"itty-router": "^5.0.20"
+	}
+}
