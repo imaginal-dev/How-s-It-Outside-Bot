@@ -23,19 +23,11 @@ function parseXml(xml: string): any[] {
 
 async function getFinalUrl(url: string): Promise<string> {
 	try {
-		const response = await fetch(url, { method: 'HEAD', redirect: 'manual' });
-		// Check for redirect header
-		if (response.status === 302 || response.status === 301) {
-			const location = response.headers.get('location');
-			if (location) {
-				return location;
-			}
-		}
-		// Fallback to the original URL if no redirect or location header
-		return url;
+		const response = await fetch(url, { method: 'HEAD' });
+		return response.url;
 	} catch (error) {
-		console.error('Error fetching final URL:', error);
-		return url; // Return original URL on error
+		console.error(`Error fetching final URL for ${url}:`, error);
+		return url;
 	}
 }
 
