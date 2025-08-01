@@ -1,25 +1,69 @@
-// src/handlers/news.ts
 import { Env } from '../types';
 import { sendMessage, generateKeyboard } from '../telegram';
 
-const NEWS_API_URL = 'https://raw.githubusercontent.com/SauravKanchan/NewsAPI/master/top-headlines/category';
+const NEWS_API_URL = 'https://news.google.com/news/rss/headlines/section/topic';
+
+function parseXml(xml: string): any[] {
+	const items = [];
+	const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+	let match;
+	while ((match = itemRegex.exec(xml)) !== null) {
+		const itemXml = match[1];
+		const titleMatch = /<title>([\s\S]*?)<\/title>/.exec(itemXml);
+		const linkMatch = /<link>([\s\S]*?)<\/link>/.exec(itemXml);
+		if (titleMatch && linkMatch) {
+			items.push({
+				title: titleMatch[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"'),
+				link: linkMatch[1],
+			});
+		}
+	}
+	return items;
+}
+
+async function getFinalUrl(url: string): Promise<string> {
+	try {
+		const response = await fetch(url, { method: 'HEAD' });
+		return response.url;
+	} catch (error) {
+		console.error(`Error fetching final URL for ${url}:`, error);
+		return url;
+	}
+}
 
 export async function handleNewsCategory(category: string, chatId: number, env: Env) {
-	const url = `${NEWS_API_URL}/${category}/in.json`;
+	const categoryMap: { [key: string]: string } = {
+		general: 'WORLD',
+		business: 'BUSINESS',
+		entertainment: 'ENTERTAINMENT',
+		health: 'HEALTH',
+		science: 'SCIENCE',
+		sports: 'SPORTS',
+		technology: 'TECHNOLOGY',
+	};
+
+	const googleCategory = categoryMap[category.toLowerCase()] || 'WORLD';
+	const url = `${NEWS_API_URL}/${googleCategory}?hl=en-US&gl=US&ceid=US:en`;
+
 	try {
 		const response = await fetch(url);
-		const data: any = await response.json();
+		const text = await response.text();
+		const articles = parseXml(text);
 
-		if (data.status !== 'ok' || !data.articles || data.articles.length === 0) {
+		if (!articles || articles.length === 0) {
 			return sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, `Sorry, I couldn’t fetch news for the ${category} category.`);
 		}
 
-		const articles = data.articles
-			.slice(0, 5)
-			.map((article: any) => '📰 <strong>' + article.title + '</strong>\n<a href="' + article.url + '">Read more</a>')
-			.join('\n\n');
+		const topArticles = articles.slice(0, 5);
 
-		const message = '<strong>Top 5 ' + category.charAt(0).toUpperCase() + category.slice(1) + ' Headlines</strong>\n\n' + articles;
+		const articlePromises = topArticles.map(async (article) => {
+			const finalUrl = await getFinalUrl(article.link);
+			return `📰 <strong>${article.title}<\/strong>\n<a href="${finalUrl}">Read more ➤<\/a>`;
+		});
+
+		const articlesFormatted = (await Promise.all(articlePromises)).join('\n\n');
+
+		const message = `<strong>Top 5 ${category.charAt(0).toUpperCase() + category.slice(1)} Headlines<\/strong>\n\n${articlesFormatted}`;
 		const keyboard = generateKeyboard(category);
 
 		return sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, message, keyboard);
