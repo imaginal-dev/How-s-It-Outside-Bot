@@ -115,6 +115,11 @@ function getPlayerActionMessage(lastAction: string, turnScore: number, remaining
 }
 
 export async function handleDiceCallback(data: string, chatId: number, messageId: number, env: Env, ctx: ExecutionContext) {
+	if (!GAME_STATE.actionMessageId) {
+		const message = 'This game session has expired due to inactivity. Please start a new game with /dice.';
+		await editMessage(env.TELEGRAM_BOT_TOKEN, chatId, messageId, message);
+		return;
+	}
 	if (messageId !== GAME_STATE.actionMessageId) return;
 
 	const parts = data.split('_');
