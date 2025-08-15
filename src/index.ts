@@ -10,6 +10,10 @@ import { handlePictureCommand } from './handlers/picture';
 import { handleHoroscopeCommand, handleDate, getUserState } from './handlers/horoscope';
 import { handleDiceCommand, handleDiceCallback, handleDiceRulesCommand } from './handlers/dice';
 import { handleHelpCommand } from './handlers/help';
+import { handleMemeCommand } from './handlers/meme';
+import { handleJokeCommand } from './handlers/joke';
+import { handlePolicyCommand } from './handlers/policy';
+import { handleAboutCommand } from './handlers/about';
 
 async function handleCommand(command: string, chatId: number, env: Env, ctx: ExecutionContext) {
 	switch (command) {
@@ -37,6 +41,14 @@ async function handleCommand(command: string, chatId: number, env: Env, ctx: Exe
 			return handleDiceCommand(chatId, env);
 		case '/dice_rules':
 			return handleDiceRulesCommand(chatId, env);
+		case '/meme':
+			return handleMemeCommand(chatId, env);
+		case '/joke':
+			return handleJokeCommand(chatId, env);
+		case '/policy':
+			return handlePolicyCommand(chatId, env);
+		case '/about':
+			return handleAboutCommand(chatId, env);
 		default:
 			return sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, "Sorry, I don't recognize that command.");
 	}
