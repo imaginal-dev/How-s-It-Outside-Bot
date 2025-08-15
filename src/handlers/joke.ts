@@ -1,0 +1,24 @@
+import { Env } from '../types';
+import { sendMessage } from '../telegram';
+
+export async function handleJokeCommand(chatId: number, env: Env) {
+	try {
+		const response = await fetch(
+			'https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,religious,political,racist,sexist,explicit&type=single',
+		);
+		const data: any = await response.json();
+
+		if (data.error) {
+			throw new Error(data.error);
+		}
+
+		const joke = `How do you like that joke 😂:\n\n${data.joke}`;
+
+		await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, joke);
+	} catch (error) {
+		console.error('Error fetching joke:', error);
+		await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, "Sorry, I couldn't fetch a joke right now. Please try again later.");
+	}
+
+	return new Response('OK');
+}
