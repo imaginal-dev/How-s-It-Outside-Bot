@@ -12,7 +12,10 @@ export async function handleJokeCommand(chatId: number, env: Env) {
 			throw new Error(data.error);
 		}
 
-		const joke = `How do you like that joke 😂:\n\n${data.joke}`;
+		const laughingEmojis = ['😂', '🤣', '😆', '😄', '😃', '😀', '😁', '😸', '😹'];
+		const randomEmoji = laughingEmojis[Math.floor(Math.random() * laughingEmojis.length)];
+
+		const joke = `${data.joke} ${randomEmoji}`;
 
 		await sendMessage(env.TELEGRAM_BOT_TOKEN, chatId, joke);
 	} catch (error) {
